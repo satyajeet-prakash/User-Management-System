@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -23,7 +24,12 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public User getUserById(Long userId) {
-        return userRepository.findById(userId).get();
+        Optional<User> user = userRepository.findById(userId);
+        if(user.isPresent()) {
+            return user.get();
+        } else {
+            return new User();
+        }
     }
 
     @Override
@@ -32,8 +38,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateAllUserColumns(Long userId, User user) {
-        User existingUser = userRepository.findById(userId).get();
+    public void updateAllUserColumns(User user) {
+        User existingUser = userRepository.findById(user.getUserId()).get();
         existingUser.setFirstName(user.getFirstName());
         existingUser.setLastName(user.getLastName());
         existingUser.setRole(user.getRole());

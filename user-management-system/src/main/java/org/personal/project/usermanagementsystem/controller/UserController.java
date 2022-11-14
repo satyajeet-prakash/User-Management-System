@@ -7,7 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -17,29 +19,34 @@ public class UserController {
     UserServiceImpl userService;
 
     @RequestMapping("/user")
-    public List<User> getAllUsersList() {
-        return userService.getAllUsers();
+    public ResponseEntity<?> getAllUsersList() {
+        return ResponseEntity.ok( userService.getAllUsers());
     }
     @RequestMapping("/user/{userId}")
     public ResponseEntity<?> getUserById(@PathVariable Long userId) {
-        try {
-            return ResponseEntity.ok(userService.getUserById(userId));
-        } catch(Exception e) {
+        User user = userService.getUserById(userId);
+        if(user != null) {
+            return ResponseEntity.ok(user);
+        } else {
             return new ResponseEntity<String>("No User found with Id : " + userId, HttpStatus.BAD_REQUEST);
         }
     }
     @PostMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> addUser(@RequestBody User user) {
+    public ResponseEntity<?> addUser(@RequestBody User user) {
         userService.saveUser(user);
-        return  ResponseEntity.ok("Thanks for Posting");
+        URI path = ServletUriComponentsBuilder.fromCurrentRequestUri()
+                .path("/{userId}")
+                .buildAndExpand(user.getUserId())
+                .toUri();
+        return ResponseEntity.created(path).build();
     }
-    @PutMapping(value="/user/{userId}")
-    public ResponseEntity<String> updateUser(@PathVariable Long userId, @RequestBody User user) {
+    @PutMapping(value="/user")
+    public ResponseEntity<String> updateUser(@RequestBody User user) {
         try {
-            userService.updateAllUserColumns(userId, user);
+            userService.updateAllUserColumns(user);
             return ResponseEntity.ok("Successfully Updated");
         } catch(Exception e) {
-            return new ResponseEntity<String>("No User found with Id : " + userId, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<String>("No User found with Id : " + user.getUserId(), HttpStatus.BAD_REQUEST);
         }
     }
 
